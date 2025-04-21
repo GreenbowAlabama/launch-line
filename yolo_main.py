@@ -14,6 +14,7 @@ speed_mph = None
 waiting_for_cone2 = False
 speed_ready = False
 previous_ball_y = None
+armed = False  # NEW: prevents false arm on reset
 
 # Cone positions (set dynamically)
 cone1_y = None  # red (garage door / top of frame)
@@ -48,7 +49,6 @@ while True:
 
     results = model.track(source=frame, conf=0.3, classes=[32], persist=True, verbose=False)
 
-
     if cone1_y is not None and cone2_y is not None:
         if results and len(results[0].boxes) > 0:
             for box in results[0].boxes:
@@ -58,16 +58,17 @@ while True:
                 # Draw box around ball
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 255), 2)
                 cv2.putText(frame, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-                
-                # Display confidence score
-                # conf = float(box.conf[0])
-                # cv2.putText(frame, f"{conf:.2f}", (x1, y2 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
                 # Calculate vertical center of ball
                 ball_y = int((y1 + y2) / 2)
 
+                # PRE-ARM CHECK: Ensure ball is back below Cone 1 before tracking resumes
+                if not armed and cross_time_1 is None and ball_y > cone1_y + 20:
+                    armed = True
+                    print("System re-armed. Ready to detect crossing.")
+
                 # START: Detect crossing Cone 1 (start) from bottom
-                if cross_time_1 is None and previous_ball_y and \
+                if armed and cross_time_1 is None and previous_ball_y and \
                     previous_ball_y > cone1_y >= ball_y:
                     cross_time_1 = time.time()
                     waiting_for_cone2 = True
@@ -119,6 +120,7 @@ while True:
         waiting_for_cone2 = False
         speed_ready = False
         previous_ball_y = None
+        armed = False  # NEW: prevent false trigger on reset
         print("Reset detection state.")
 
 cap.release()
