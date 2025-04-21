@@ -1,0 +1,22 @@
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Mac system files
+.DS_Store
+
+# VS Code settings (optional)
+.vscode/
+
+# OS trash / metadata
+.Trashes
+ehthumbs.db
+Thumbs.db
+Icon?
+
+# Logs
+*.log
+
+# Env-specific files
+.env
