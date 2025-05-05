@@ -17,6 +17,7 @@ spec:
       containers:
         - name: launch-labs
           image: ghcr.io/greenbowalabama/launch-line:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:

@@ -30,6 +30,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
+            --no-cache \
             -t ghcr.io/greenbowalabama/launch-line:latest \
             --push .
 
