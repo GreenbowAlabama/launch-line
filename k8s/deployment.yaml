@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: launch-labs-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: launch-labs-app
+  template:
+    metadata:
+      labels:
+        app: launch-labs-app
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: launch-labs
+          image: ghcr.io/greenbowalabama/launch-line:slim
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
