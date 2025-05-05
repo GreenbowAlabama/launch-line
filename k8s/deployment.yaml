@@ -16,7 +16,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: launch-labs
-          image: ghcr.io/greenbowalabama/launch-line:slim
+          image: ghcr.io/greenbowalabama/launch-line:latest
           ports:
             - containerPort: 80
           resources:
