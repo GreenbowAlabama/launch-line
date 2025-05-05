@@ -33,10 +33,6 @@ jobs:
             -t ghcr.io/greenbowalabama/launch-line:latest \
             --push .
 
-      - name: Rollout restart AKS deployment
-        run: |
-          kubectl rollout restart deployment launch-labs-app
-          
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
@@ -54,3 +50,7 @@ jobs:
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
+
+      - name: Rollout restart AKS deployment
+        run: |
+          kubectl rollout restart deployment launch-labs-app
