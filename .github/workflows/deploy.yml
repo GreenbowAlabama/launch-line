@@ -26,14 +26,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/greenbowalabama/launch-line:latest
-          platforms: linux/amd64
+      - name: Build and push Docker image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -t ghcr.io/greenbowalabama/launch-line:latest \
+            --push .
 
+      - name: Rollout restart AKS deployment
+        run: |
+          kubectl rollout restart deployment launch-labs-app
+          
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
