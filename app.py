@@ -1,4 +1,7 @@
 # app.py
+import subprocess
+import os
+import signal
 
 from flask import Flask, render_template_string, jsonify
 
@@ -37,4 +40,12 @@ def status():
     })
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    # Start YOLO script in the background
+    yolo_process = subprocess.Popen(["python3", "yolo_main_with_goal.py"])
+
+    try:
+        app.run(host="0.0.0.0", port=80)
+    finally:
+        # Clean up YOLO process on shutdown
+        os.kill(yolo_process.pid, signal.SIGTERM)
+
