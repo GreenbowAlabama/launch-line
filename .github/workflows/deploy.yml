@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
 
-env:
-  ENV: dev
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -16,9 +13,11 @@ jobs:
       packages: write
 
     steps:
+      # Checkout source code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Set up Python and cache pip dependencies (if needed by scripts)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -37,9 +36,11 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Authenticate with GitHub Container Registry
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -47,6 +48,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
+      # Build and push the Docker image
       - name: Build and push Docker image
         run: |
           docker buildx build \
@@ -54,11 +56,13 @@ jobs:
             -t ghcr.io/greenbowalabama/launch-line:latest \
             --push .
 
+      # Set up kubectl
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
+      # Login to Azure and get AKS credentials
       - name: Azure login
         uses: azure/login@v1
         with:
@@ -66,29 +70,41 @@ jobs:
 
       - name: Set kube context
         run: |
-          RESOURCE_GROUP=launch-labs-${{ env.ENV }}-rg
           az aks get-credentials \
-            --resource-group $RESOURCE_GROUP \
+            --resource-group launch-labs-dev-rg \
             --name launch-labs-aks \
             --overwrite-existing
 
+      # Deploy MediaMTX ConfigMap to AKS
+      - name: Update MediaMTX ConfigMap
+        run: |
+          chmod +x scripts/update-mediamtx-config.sh
+          ./scripts/update-mediamtx-config.sh dev
+
+      # Deploy MediaMTX to AKS (custom script)
       - name: Deploy MediaMTX to AKS
-        env:
-          ENV: ${{ env.ENV }}
         run: |
           chmod +x scripts/deploy-mediamtx.sh
-          ./scripts/deploy-mediamtx.sh $ENV
+          ./scripts/deploy-mediamtx.sh dev
 
+      - name: Update MediaMTX config
+        run: |
+          chmod +x scripts/update-mediamtx-config.sh
+          ./scripts/update-mediamtx-config.sh dev
+
+      # Trigger rollout of MediaMTX
       - name: Patch MediaMTX deployment to trigger rollout
         run: |
           kubectl patch deployment mediamtx -n mediamtx -p \
             "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"build-timestamp\":\"$(date +'%s')\"}}}}}"
 
+      # Deploy application
       - name: Deploy application to AKS
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
+      # Restart application
       - name: Restart application
         run: |
           kubectl rollout restart deployment launch-labs-app
