@@ -1,9 +1,8 @@
-server:
-  logLevel: info
-rtmp:
-  enable: yes
-webrtc:
-  enable: yes
+logLevel: info
+rtmp: true
+hls: true
+webrtc: true
+api: true
 paths:
   all:
     source: publisher
