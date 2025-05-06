@@ -45,7 +45,7 @@ spec:
     spec:
       containers:
         - name: mediamtx
-          image: bluenviron/mediamtx:1.7.2
+          image: bluenviron/mediamtx:latest
           ports:
             - containerPort: 8554
             - containerPort: 1935
