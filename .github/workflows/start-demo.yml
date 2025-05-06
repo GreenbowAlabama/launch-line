@@ -1,0 +1,36 @@
+name: Start Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to deploy (e.g., dev)"
+        required: true
+        default: dev
+
+jobs:
+  start-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: Set kube context
+        run: |
+          az aks get-credentials \
+            --resource-group launch-labs-${{ github.event.inputs.env }}-rg \
+            --name launch-labs-aks \
+            --overwrite-existing
+
+      - name: Run start demo script
+        run: ./scripts/start-demo.sh ${{ github.event.inputs.env }}
