@@ -1,30 +1,68 @@
 #!/bin/bash
 
-# Usage: ./deploy-with-configmap.sh <app-name> <namespace> <configmap-name> <config-file-path>
+# Usage:
+# ./deploy-with-configmap.sh \
+#   --namespace mediamtx \
+#   --deployment mediamtx \
+#   --configmap mediamtx-config \
+#   --configfile k8s/mediamtx.yml
 
-APP_NAME=$1
-NAMESPACE=$2
-CONFIGMAP_NAME=$3
-CONFIG_FILE_PATH=$4
+set -e
 
-if [[ -z "$APP_NAME" || -z "$NAMESPACE" || -z "$CONFIGMAP_NAME" || -z "$CONFIG_FILE_PATH" ]]; then
-  echo "Usage: $0 <app-name> <namespace> <configmap-name> <config-file-path>"
+# Defaults
+NAMESPACE="default"
+DEPLOYMENT=""
+CONFIGMAP=""
+CONFIGFILE=""
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --namespace)
+      NAMESPACE="$2"
+      shift
+      shift
+      ;;
+    --deployment)
+      DEPLOYMENT="$2"
+      shift
+      shift
+      ;;
+    --configmap)
+      CONFIGMAP="$2"
+      shift
+      shift
+      ;;
+    --configfile)
+      CONFIGFILE="$2"
+      shift
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Validation
+if [[ -z "$DEPLOYMENT" || -z "$CONFIGMAP" || -z "$CONFIGFILE" ]]; then
+  echo "Missing required arguments."
+  echo "Usage: $0 --namespace <ns> --deployment <name> --configmap <name> --configfile <file>"
   exit 1
 fi
 
-# Ensure namespace exists
-kubectl get ns "$NAMESPACE" >/dev/null 2>&1 || kubectl create ns "$NAMESPACE"
-
-# Create or update ConfigMap from the specified file
-kubectl create configmap "$CONFIGMAP_NAME" \
-  --from-file="$CONFIG_FILE_PATH" \
+# Apply ConfigMap
+echo "Updating ConfigMap $CONFIGMAP in namespace $NAMESPACE with file $CONFIGFILE..."
+kubectl create configmap "$CONFIGMAP" \
   --namespace "$NAMESPACE" \
+  --from-file=mediamtx.yml="$CONFIGFILE" \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# Patch deployment to trigger a rollout if ConfigMap has changed
-kubectl patch deployment "$APP_NAME" \
-  -n "$NAMESPACE" \
-  -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"configmap-hash\":\"$(date +%s)\"}}}}}"
+# Patch deployment to trigger restart
+echo "Patching deployment $DEPLOYMENT to trigger rollout..."
+kubectl patch deployment "$DEPLOYMENT" \
+  --namespace "$NAMESPACE" \
+  -p '{"spec":{"template":{"metadata":{"annotations":{"configmap-update":"'"$(date +%s)'"}}}}}'
 
-# Confirm rollout status
-kubectl rollout status deployment "$APP_NAME" -n "$NAMESPACE"
+echo "✅ ConfigMap updated and deployment restarted."

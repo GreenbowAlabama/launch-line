@@ -68,7 +68,7 @@ jobs:
             --name launch-labs-aks \
             --overwrite-existing
 
-      - name: Deploy MediaMTX ConfigMap and rollout
+      - name: Deploy MediaMTX ConfigMap and Rollout
         run: |
           chmod +x scripts/deploy-with-configmap.sh
           ./scripts/deploy-with-configmap.sh \
