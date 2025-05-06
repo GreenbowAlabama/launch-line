@@ -13,8 +13,6 @@ metadata:
     app: mediamtx
 data:
   mediamtx.yml: |
-    server:
-      logLevel: info
     rtmp: yes
     hls: yes
     webrtc: yes
@@ -41,11 +39,12 @@ spec:
       containers:
         - name: mediamtx
           image: bluenviron/mediamtx:latest
+          args: ["-config", "/mediamtx.yml"]
           ports:
-            - containerPort: 8554
-            - containerPort: 1935
-            - containerPort: 8888
-            - containerPort: 9997
+            - containerPort: 8554  # RTSP
+            - containerPort: 1935  # RTMP
+            - containerPort: 8888  # HTTP UI and HLS
+            - containerPort: 9997  # API
           volumeMounts:
             - name: config
               mountPath: /mediamtx.yml
