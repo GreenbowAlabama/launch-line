@@ -1,50 +1,63 @@
 #!/bin/bash
+set -e
 
 # === Inputs ===
 ENV=$1
 LOCATION="eastus"
 RESOURCE_GROUP="launch-labs-${ENV}-rg"
 AKS_NAME="launch-labs-aks"
+STANDARD_POOL="standardpool"
+GPU_POOL="gpupool"
+ENABLE_GPU=false
 
-# === Check input ===
-if [ -z "$ENV" ]; then
-  echo "Usage: ./scripts/deploy-aks.sh <environment>"
-  exit 1
+if [[ "$2" == "--scale-gpu" ]]; then
+  ENABLE_GPU=true
 fi
 
-# === Create Resource Group (if not exists) ===
-echo "Ensuring resource group: $RESOURCE_GROUP exists..."
-az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+echo "Using resource group: $RESOURCE_GROUP"
+az group create --name $RESOURCE_GROUP --location $LOCATION
 
-# === Check if AKS cluster already exists ===
-if az aks show --resource-group "$RESOURCE_GROUP" --name "$AKS_NAME" > /dev/null 2>&1; then
-  echo "AKS cluster $AKS_NAME already exists, skipping creation."
-else
-  echo "Creating AKS cluster: $AKS_NAME..."
+if ! az aks show --resource-group $RESOURCE_GROUP --name $AKS_NAME &>/dev/null; then
+  echo "Creating AKS cluster..."
   az aks create \
     --resource-group $RESOURCE_GROUP \
-    --name launch-labs-aks \
-    --node-count 1 \
+    --name $AKS_NAME \
+    --location $LOCATION \
     --enable-managed-identity \
+    --nodepool-name $STANDARD_POOL \
+    --node-vm-size Standard_B2s \
+    --node-count 1 \
     --enable-addons monitoring \
-    --node-vm-size Standard_A2_v2 \
     --generate-ssh-keys
+else
+  echo "AKS cluster already exists, skipping create."
 fi
 
-# === Add GPU Node Pool (if not exists) ===
-if az aks nodepool show --resource-group "$RESOURCE_GROUP" --cluster-name "$AKS_NAME" --name gpu > /dev/null 2>&1; then
-  echo "GPU node pool already exists, skipping addition."
-else
-  echo "Adding GPU node pool to $AKS_NAME..."
+if ! az aks nodepool show --cluster-name $AKS_NAME --resource-group $RESOURCE_GROUP --name $GPU_POOL &>/dev/null; then
+  echo "Creating GPU node pool..."
   az aks nodepool add \
     --resource-group $RESOURCE_GROUP \
-    --cluster-name launch-labs-aks \
-    --name gpu \
-    --node-count 1 \
-    --node-vm-size standard_d2s_v3 \
-    --labels workload=gpu \
-    --mode User \
-    --node-taints sku=gpu:NoSchedule
+    --cluster-name $AKS_NAME \
+    --name $GPU_POOL \
+    --node-count 0 \
+    --node-vm-size Standard_NC4as_T4_v3 \
+    --node-taints sku=gpu:NoSchedule \
+    --labels sku=gpu \
+    --mode User
+else
+  echo "GPU node pool already exists."
 fi
 
-echo "✅ AKS cluster $AKS_NAME with GPU support is ready in '$ENV' environment."
+if [ "$ENABLE_GPU" = true ]; then
+  echo "Scaling GPU node pool to 1..."
+  az aks nodepool scale \
+    --resource-group $RESOURCE_GROUP \
+    --cluster-name $AKS_NAME \
+    --name $GPU_POOL \
+    --node-count 1
+else
+  echo "GPU pool remains scaled to 0."
+fi
+
+az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
+echo "AKS cluster setup complete."
