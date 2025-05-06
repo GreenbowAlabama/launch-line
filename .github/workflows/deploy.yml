@@ -13,44 +13,49 @@ jobs:
       packages: write
 
     steps:
-      - name: ✅ Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: ⚖️ Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔑 Login to GHCR
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: 📁 Build and Push Docker Image
+      - name: Build and push Docker image
         run: |
           docker buildx build \
             --platform linux/amd64 \
             -t ghcr.io/greenbowalabama/launch-line:latest \
             --push .
 
-      - name: ✨ Set up kubectl
+      - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
-      - name: 📅 Azure Login
+      - name: Azure login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: 🔧 Set Kubernetes Context
+      - name: Set kube context
         run: az aks get-credentials --resource-group launch-labs-dev-rg --name launch-labs-aks --overwrite-existing
 
-      - name: 🚀 Deploy Manifests
+      - name: Deploy MediaMTX via script
+        run: |
+          chmod +x scripts/deploy-mediamtx.sh
+          ./scripts/deploy-mediamtx.sh dev
+
+      - name: Deploy application to AKS
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
-      - name: ↻ Rollout Restart Deployment
+      - name: Restart application
         run: |
           kubectl rollout restart deployment launch-labs-app
