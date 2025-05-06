@@ -1,4 +1,5 @@
 import cv2
+import os
 import math
 import time
 import numpy as np
@@ -24,8 +25,13 @@ background = cv2.resize(soccer_field, (FRAME_WIDTH, FRAME_HEIGHT))
 model = YOLO("yolov8n.pt")
 
 # Use the RTSP stream served by MediaMTX
-RTSP_STREAM_URL = "rtsp://4.255.67.198:8554/live/stream"
+RTSP_STREAM_URL = os.getenv("RTSP_STREAM_URL", "rtsp://4.255.67.198:8554/live/stream")
 cap = cv2.VideoCapture(RTSP_STREAM_URL)
+
+if not cap.isOpened():
+    raise RuntimeError(f"Failed to open RTSP stream: {RTSP_STREAM_URL}")
+
+print(f"✅ Connected to RTSP stream: {RTSP_STREAM_URL}")
 
 cone1_y = None
 cone2_y = None
