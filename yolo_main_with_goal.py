@@ -1,4 +1,4 @@
-# yolo_main_simulated_field.py
+# yolo_main_with_goal.py
 import cv2
 import math
 import time
@@ -20,7 +20,10 @@ background = cv2.resize(soccer_field, (FRAME_WIDTH, FRAME_HEIGHT))
 
 # Load model
 model = YOLO("yolov8n.pt")
-cap = cv2.VideoCapture(2)
+
+# Use the RTSP stream served by MediaMTX
+RTSP_STREAM_URL = "rtsp://4.255.67.198:8554/live/stream"
+cap = cv2.VideoCapture(RTSP_STREAM_URL)
 
 cone1_y = None
 cone2_y = None
@@ -34,7 +37,9 @@ result_text = ""
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
-        break
+        print("Failed to read frame from RTSP stream.")
+        time.sleep(1)
+        continue
 
     frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
     overlay = background.copy()
@@ -52,9 +57,8 @@ while cap.isOpened():
         cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 255, 255), 2)
         cv2.putText(overlay, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
-    # Click to set cones
     if cone1_y is None or cone2_y is None:
-        cv2.putText(overlay, "Click Cone 1 (start near kicker), then Cone 2 (end near camera)", (30, 60),
+        cv2.putText(overlay, "Click Cone 1 (start), then Cone 2 (end)", (30, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
         cv2.imshow("Launch Sim", overlay)
 
@@ -63,30 +67,25 @@ while cap.isOpened():
             if event == cv2.EVENT_LBUTTONDOWN:
                 if cone1_y is None:
                     cone1_y = y
-                    print(f"Set Cone 1 (START - near kicker) at y={y}")
+                    print(f"Set Cone 1 at y={y}")
                 elif cone2_y is None:
                     cone2_y = y
-                    print(f"Set Cone 2 (END - near camera) at y={y}")
+                    print(f"Set Cone 2 at y={y}")
 
         cv2.setMouseCallback("Launch Sim", set_cones)
-        key = cv2.waitKey(1)
-        if key == 27:
+        if cv2.waitKey(1) == 27:
             break
         continue
 
-    # Draw cones
     cv2.line(overlay, (0, cone1_y), (FRAME_WIDTH, cone1_y), (0, 0, 255), 2)
     cv2.line(overlay, (0, cone2_y), (FRAME_WIDTH, cone2_y), (255, 0, 0), 2)
-    cv2.putText(overlay, "Cone 1 (START)", (30, cone1_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-    cv2.putText(overlay, "Cone 2 (END)", (30, cone2_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
-    # Detect crossing
     if center_y:
         if not armed and center_y < cone1_y:
             armed = True
             cross_registered = False
             launch_point = (center_x, center_y)
-            print("System re-armed. (top-to-bottom)")
+            print("System armed")
 
         if armed and not cross_registered and center_y >= cone1_y:
             cross_time_1 = time.time()
@@ -100,17 +99,14 @@ while cap.isOpened():
             speed_mph = speed_fps * MPH_CONVERSION
             print(f"Ball Speed: {speed_mph:.2f} MPH")
 
-            # Predict ball position at virtual goal distance
-            angle_radians = -math.pi / 2  # straight forward
+            # Predict goal hit
             t_goal = (GOAL_DISTANCE_YARDS * 3.0) / speed_fps
-            pred_x = int(launch_point[0])  # no lateral change
-            pred_y = int(launch_point[1] + math.sin(angle_radians) * speed_fps * t_goal)
+            pred_x = int(launch_point[0])
+            pred_y = int(launch_point[1] + math.sin(-math.pi / 2) * speed_fps * t_goal)
 
-            # Draw virtual goal
             goal_x = (FRAME_WIDTH - GOAL_WIDTH_PX) // 2
             goal_y = 50
             cv2.rectangle(overlay, (goal_x, goal_y), (goal_x + GOAL_WIDTH_PX, goal_y + GOAL_HEIGHT_PX), (0, 255, 0), 2)
-            cv2.putText(overlay, "Virtual Goal", (goal_x, goal_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             if goal_x <= pred_x <= goal_x + GOAL_WIDTH_PX and goal_y <= pred_y <= goal_y + GOAL_HEIGHT_PX:
                 color = (0, 255, 0)
@@ -120,8 +116,7 @@ while cap.isOpened():
                 result_text = f"MISS ({speed_mph:.1f} MPH)"
 
             cv2.circle(overlay, (pred_x, pred_y), 10, color, -1)
-            print(f"[Virtual Goal @ {GOAL_DISTANCE_YARDS} yards] X: {pred_x}, Y: {pred_y} → {result_text}")
-
+            print(result_text)
             armed = False
             cross_time_1 = None
 

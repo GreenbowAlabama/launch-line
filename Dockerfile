@@ -1,25 +1,23 @@
-# Use a minimal Python base image
-FROM --platform=linux/amd64 python:3.11-slim
+# Use minimal Python image with support for numpy, OpenCV, Torch
+FROM python:3.11-slim
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy only requirements for better cache utilization
+# Install system dependencies for OpenCV and other libs
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 libsm6 libxext6 libxrender-dev ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies
 COPY requirements.txt .
-
-# Install system-level dependencies first
-RUN apt-get update && \
-    apt-get install -y ffmpeg libsm6 libxext6 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app
+# Copy app and YOLO assets
 COPY . .
 
-# Expose the port Flask will listen on
+# Expose web server port
 EXPOSE 80
 
-# Run the app
+# Run Flask app which launches the YOLO script
 CMD ["python", "app.py"]

@@ -2,12 +2,13 @@
 import subprocess
 import os
 import signal
-
 from flask import Flask, render_template_string, jsonify
 
+app = Flask(__name__)
 MEDIA_SERVER = "http://4.255.67.198:8888"
 
-app = Flask(__name__)
+# Launch YOLO detection in background
+yolo_process = subprocess.Popen(["python3", "yolo_main_with_goal.py"])
 
 @app.route("/")
 def index():
@@ -36,16 +37,11 @@ def status():
         "status": "idle",
         "camera": "pending",
         "fps": None,
-        "message": "App is running and waiting for RTSP stream"
+        "message": "App is running and YOLO process is active"
     })
 
 if __name__ == "__main__":
-    # Start YOLO script in the background
-    yolo_process = subprocess.Popen(["python3", "yolo_main_with_goal.py"])
-
     try:
         app.run(host="0.0.0.0", port=80)
     finally:
-        # Clean up YOLO process on shutdown
         os.kill(yolo_process.pid, signal.SIGTERM)
-
