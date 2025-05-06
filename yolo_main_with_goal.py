@@ -31,7 +31,7 @@ cap = cv2.VideoCapture(RTSP_STREAM_URL)
 if not cap.isOpened():
     raise RuntimeError(f"Failed to open RTSP stream: {RTSP_STREAM_URL}")
 
-print(f"✅ Connected to RTSP stream: {RTSP_STREAM_URL}")
+print(f"Connected to RTSP stream: {RTSP_STREAM_URL}")
 
 cone1_y = None
 cone2_y = None
