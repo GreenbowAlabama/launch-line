@@ -75,7 +75,7 @@ jobs:
             --namespace mediamtx \
             --deployment mediamtx \
             --configmap mediamtx-config \
-            --configfile k8s/mediamtx.yml
+            --configfile config/mediamtx.yml
 
       - name: Deploy application to AKS
         run: |
