@@ -22,6 +22,7 @@ data:
     paths:
       all:
         source: publisher
+        hls: yes
 
 ---
 apiVersion: apps/v1
