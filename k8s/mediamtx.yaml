@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: mediamtx
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -13,6 +14,7 @@ metadata:
     app: mediamtx
 data:
   mediamtx.yml: |
+    logLevel: info
     rtmp: yes
     hls: yes
     webrtc: yes
@@ -20,6 +22,7 @@ data:
     paths:
       all:
         source: publisher
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -38,8 +41,8 @@ spec:
     spec:
       containers:
         - name: mediamtx
-          image: bluenviron/mediamtx:latest
-          args: ["-config", "/mediamtx.yml"]
+          image: bluenviron/mediamtx:1.12.1
+          command: ["/mediamtx", "/mediamtx.yml"]
           ports:
             - containerPort: 8554  # RTSP
             - containerPort: 1935  # RTMP
@@ -53,6 +56,7 @@ spec:
         - name: config
           configMap:
             name: mediamtx-config
+
 ---
 apiVersion: v1
 kind: Service
