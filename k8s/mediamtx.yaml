@@ -21,9 +21,7 @@ data:
       enable: yes
     webrtc:
       enable: yes
-    api:
-      enable: yes
-      address: 0.0.0.0:9997
+    api: yes
     paths:
       all:
         source: publisher
