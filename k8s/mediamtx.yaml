@@ -45,12 +45,12 @@ spec:
     spec:
       containers:
         - name: mediamtx
-          image: bluenviron/mediamtx:latest
+          image: bluenviron/mediamtx:1.7.2
           ports:
-            - containerPort: 8554  # RTSP
-            - containerPort: 1935  # RTMP
-            - containerPort: 8888  # HTTP UI and HLS
-            - containerPort: 9997  # API
+            - containerPort: 8554
+            - containerPort: 1935
+            - containerPort: 8888
+            - containerPort: 9997
           volumeMounts:
             - name: config
               mountPath: /mediamtx.yml
@@ -63,7 +63,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mediamtx-service
+  name: mediamtx
   namespace: mediamtx
 spec:
   type: LoadBalancer
