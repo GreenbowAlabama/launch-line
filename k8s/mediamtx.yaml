@@ -15,12 +15,9 @@ data:
   mediamtx.yml: |
     server:
       logLevel: info
-    rtmp:
-      enable: yes
-    hls:
-      enable: yes
-    webrtc:
-      enable: yes
+    rtmp: yes
+    hls: yes
+    webrtc: yes
     api: yes
     paths:
       all:
