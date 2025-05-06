@@ -1,23 +1,23 @@
-# Use minimal Python image with support for numpy, OpenCV, Torch
-FROM python:3.11-slim
+# Use a minimal Python base image
+FROM --platform=linux/amd64 python:3.11-slim
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Install system dependencies for OpenCV and other libs
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy and install Python dependencies
+# Copy only requirements first for better caching
 COPY requirements.txt .
+
+# Install dependencies without caching wheels
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app and YOLO assets
+# Copy the rest of the app code and assets
 COPY . .
 
-# Expose web server port
+# Explicitly copy soccer_field.jpg in case Docker ignores dotfiles
+COPY soccer_field.jpg .
+
+# Expose the port your app listens on
 EXPOSE 80
 
-# Run Flask app which launches the YOLO script
+# Run your app
 CMD ["python", "app.py"]
