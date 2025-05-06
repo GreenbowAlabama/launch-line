@@ -27,6 +27,8 @@ spec:
           env:
             - name: RTSP_URL
               value: "rtsp://your.camera.ip.address:554/stream"
+            - name: RTSP_STREAM_URL
+              value: "rtsp://172.212.69.76:8554/live/stream"
           imagePullPolicy: Always
           ports:
             - containerPort: 80

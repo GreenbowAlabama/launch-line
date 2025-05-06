@@ -24,8 +24,8 @@ background = cv2.resize(soccer_field, (FRAME_WIDTH, FRAME_HEIGHT))
 # Load model
 model = YOLO("yolov8n.pt")
 
-# Use the RTSP stream served by MediaMTX
-RTSP_STREAM_URL = os.getenv("RTSP_STREAM_URL", "rtsp://4.255.67.198:8554/live/stream")
+# Use the RTSP stream served by MediaMTXimport os
+RTSP_STREAM_URL = os.getenv("RTSP_STREAM_URL", "rtsp://172.212.69.76:8554/live/stream")
 cap = cv2.VideoCapture(RTSP_STREAM_URL)
 
 if not cap.isOpened():
