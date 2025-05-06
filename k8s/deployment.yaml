@@ -12,6 +12,13 @@ spec:
       labels:
         app: launch-labs-app
     spec:
+      tolerations:
+        - key: "sku"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+      nodeSelector:
+        agentpool: gpu
       imagePullSecrets:
         - name: ghcr-secret
       containers:
