@@ -19,14 +19,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -54,15 +46,20 @@ jobs:
       - name: Set kube context
         run: az aks get-credentials --resource-group launch-labs-dev-rg --name launch-labs-aks --overwrite-existing
 
-      - name: Deploy application to AKS
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-
       - name: Deploy MediaMTX to AKS
         run: |
           chmod +x scripts/deploy-mediamtx.sh
           ./scripts/deploy-mediamtx.sh dev
+
+      - name: Patch MediaMTX deployment to trigger rollout
+        run: |
+          kubectl patch deployment mediamtx -n mediamtx -p \
+            "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"build-timestamp\":\"$(date +'%s')\"}}}}}"
+
+      - name: Deploy application to AKS
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
 
       - name: Restart application
         run: |
