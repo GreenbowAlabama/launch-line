@@ -2,9 +2,9 @@ import cv2
 import os
 import math
 import time
+import itertools
 import numpy as np
 from ultralytics import YOLO
-import itertools
 
 # Constants
 CONE_DISTANCE_FT = 8.0
