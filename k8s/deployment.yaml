@@ -17,6 +17,9 @@ spec:
       containers:
         - name: launch-labs
           image: ghcr.io/greenbowalabama/launch-line:latest
+          env:
+            - name: RTSP_URL
+              value: "rtsp://your.camera.ip.address:554/stream"
           imagePullPolicy: Always
           ports:
             - containerPort: 80

@@ -1,11 +1,12 @@
 # app.py
 from flask import Flask, jsonify, Response, render_template_string
 import cv2
+import os
 
 app = Flask(__name__)
 
 # Replace this with your actual RTSP stream URL
-RTSP_URL = "rtsp://your.camera.ip.address:554/stream"
+RTSP_URL = os.getenv("RTSP_URL", "rtsp://default.url/stream")
 
 def generate_frames():
     cap = cv2.VideoCapture(RTSP_URL)
