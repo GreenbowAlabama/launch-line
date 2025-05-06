@@ -46,15 +46,15 @@ jobs:
       - name: Set kube context
         run: az aks get-credentials --resource-group launch-labs-dev-rg --name launch-labs-aks --overwrite-existing
 
-      - name: Deploy MediaMTX via script
-        run: |
-          chmod +x scripts/deploy-mediamtx.sh
-          ./scripts/deploy-mediamtx.sh dev
-
       - name: Deploy application to AKS
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
+
+      - name: Deploy MediaMTX to AKS
+        run: |
+          chmod +x scripts/deploy-mediamtx.sh
+          ./scripts/deploy-mediamtx.sh dev
 
       - name: Restart application
         run: |
