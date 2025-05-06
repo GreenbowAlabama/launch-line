@@ -5,12 +5,12 @@
 #   --namespace mediamtx \
 #   --deployment mediamtx \
 #   --configmap mediamtx-config \
-#   --configfile k8s/mediamtx.yml
+#   --configfile config/mediamtx.yml
 
 set -e
 
 # Defaults
-NAMESPACE="default"
+NAMESPACE=""
 DEPLOYMENT=""
 CONFIGMAP=""
 CONFIGFILE=""
@@ -20,23 +20,19 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --namespace)
       NAMESPACE="$2"
-      shift
-      shift
+      shift 2
       ;;
     --deployment)
       DEPLOYMENT="$2"
-      shift
-      shift
+      shift 2
       ;;
     --configmap)
       CONFIGMAP="$2"
-      shift
-      shift
+      shift 2
       ;;
     --configfile)
       CONFIGFILE="$2"
-      shift
-      shift
+      shift 2
       ;;
     *)
       echo "Unknown option: $1"
@@ -45,83 +41,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Validation
-if [[ -z "$DEPLOYMENT" || -z "$CONFIGMAP" || -z "$CONFIGFILE" ]]; then
+# Validate
+if [[ -z "$NAMESPACE" || -z "$DEPLOYMENT" || -z "$CONFIGMAP" || -z "$CONFIGFILE" ]]; then
   echo "Missing required arguments."
   echo "Usage: $0 --namespace <ns> --deployment <name> --configmap <name> --configfile <file>"
   exit 1
 fi
 
-# Apply ConfigMap
+# Apply updated configmap
 echo "Updating ConfigMap $CONFIGMAP in namespace $NAMESPACE with file $CONFIGFILE..."
 kubectl create configmap "$CONFIGMAP" \
   --namespace "$NAMESPACE" \
   --from-file=mediamtx.yml="$CONFIGFILE" \
   --dry-run=client -o yaml | kubectl apply -f -
 
-#!/bin/bash
-
-# Usage:
-# ./deploy-with-configmap.sh \
-#   --namespace mediamtx \
-#   --deployment mediamtx \
-#   --configmap mediamtx-config \
-#   --configfile k8s/mediamtx.yml
-
-set -e
-
-# Defaults
-NAMESPACE="default"
-DEPLOYMENT=""
-CONFIGMAP=""
-CONFIGFILE=""
-
-# Parse args
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --namespace)
-      NAMESPACE="$2"
-      shift
-      shift
-      ;;
-    --deployment)
-      DEPLOYMENT="$2"
-      shift
-      shift
-      ;;
-    --configmap)
-      CONFIGMAP="$2"
-      shift
-      shift
-      ;;
-    --configfile)
-      CONFIGFILE="$2"
-      shift
-      shift
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
-
-# Validation
-if [[ -z "$DEPLOYMENT" || -z "$CONFIGMAP" || -z "$CONFIGFILE" ]]; then
-  echo "Missing required arguments."
-  echo "Usage: $0 --namespace <ns> --deployment <name> --configmap <name> --configfile <file>"
-  exit 1
-fi
-
-# Apply ConfigMap
-echo "Updating ConfigMap $CONFIGMAP in namespace $NAMESPACE with file $CONFIGFILE..."
-kubectl create configmap "$CONFIGMAP" \
-  --namespace "$NAMESPACE" \
-  --from-file=mediamtx.yml="$CONFIGFILE" \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-# Patch deployment to trigger restart
-echo "Patching deployment $DEPLOYMENT to trigger rollout..."
+# Trigger deployment restart via annotation patch
+echo "Patching deployment $DEPLOYMENT in $NAMESPACE..."
 kubectl patch deployment "$DEPLOYMENT" --namespace "$NAMESPACE" -p "$(cat <<EOF
 {
   "spec": {
@@ -137,4 +72,4 @@ kubectl patch deployment "$DEPLOYMENT" --namespace "$NAMESPACE" -p "$(cat <<EOF
 EOF
 )"
 
-echo "ConfigMap updated and deployment restarted."
+echo "✅ ConfigMap updated and rollout triggered."
