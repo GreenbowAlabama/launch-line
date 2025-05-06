@@ -7,7 +7,6 @@ __pycache__/
 *.mp4
 *.mov
 *.avi
-*.png
 *.gif
 *.ipynb
 .env

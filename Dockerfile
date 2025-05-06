@@ -23,6 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the app code and assets
 COPY . .
 
+COPY soccer_field.jpg .
+
 # Expose the port your app listens on
 EXPOSE 80
 
