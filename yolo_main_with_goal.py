@@ -53,8 +53,13 @@ while cap.isOpened():
     overlay = background.copy()
 
     # Get detections
-    results = model(frame, verbose=False)[0]
-    ball_detections = [r for r in results.boxes.data if int(r[-1]) == 32 and float(r[4]) > 0.25]
+    results = model(frame, verbose=True)[0]
+
+    # Print all detection class IDs and confidence scores
+    for box in results.boxes.data:
+        class_id = int(box[-1])
+        confidence = float(box[4])
+        print(f"Detected class: {class_id}, Confidence: {confidence}")
 
     center_y = None
     if ball_detections:
