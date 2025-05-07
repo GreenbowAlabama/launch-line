@@ -26,7 +26,11 @@ spec:
           image: ghcr.io/greenbowalabama/launch-line:latest
           env:
             - name: RTSP_URL
-              value: "rtsp://your.camera.ip.address:554/stream"
+              value: "rtsp://172.212.69.76:8554/live/stream"
+            - name: CONE1_Y
+              value: "200"
+            - name: CONE2_Y
+              value: "500"
             - name: RTSP_STREAM_URL
               value: "rtsp://172.212.69.76:8554/live/stream"
           imagePullPolicy: Always

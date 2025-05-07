@@ -24,27 +24,19 @@ background = cv2.resize(soccer_field, (FRAME_WIDTH, FRAME_HEIGHT))
 # Load model
 model = YOLO("yolov8n.pt")
 
-# Read RTSP stream URL from env or fallback to default
+# RTSP stream from MediaMTX
 RTSP_STREAM_URL = os.getenv("RTSP_STREAM_URL", "rtsp://172.212.69.76:8554/live/stream")
+cap = cv2.VideoCapture(RTSP_STREAM_URL)
 
-# Retry until camera is ready
-print(f"Attempting to connect to {RTSP_STREAM_URL}...")
-cap = None
-for attempt in range(10):
-    cap = cv2.VideoCapture(RTSP_STREAM_URL)
-    if cap.isOpened():
-        print(f"Connected to RTSP stream: {RTSP_STREAM_URL}")
-        break
-    print(f"Attempt {attempt + 1}: Waiting for RTSP stream...")
-    time.sleep(3)
+if not cap.isOpened():
+    raise RuntimeError(f"Failed to open RTSP stream: {RTSP_STREAM_URL}")
 
-if cap is None or not cap.isOpened():
-    print(f"Could not open RTSP stream after retries: {RTSP_STREAM_URL}")
-    exit(1)
+print(f"Connected to RTSP stream: {RTSP_STREAM_URL}")
 
-# Initialize detection state
-cone1_y = None
-cone2_y = None
+# Set cones from environment or default
+cone1_y = int(os.getenv("CONE1_Y", "200"))
+cone2_y = int(os.getenv("CONE2_Y", "500"))
+
 armed = False
 cross_time_1 = None
 speed_mph = None
@@ -52,26 +44,20 @@ launch_point = None
 cross_registered = False
 result_text = ""
 
-# Simulated fallback position
 sim_positions = itertools.cycle(range(100, FRAME_HEIGHT - 100, 5))
 
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
-        print("Failed to read from stream.")
-        time.sleep(1)
         continue
 
     overlay = background.copy()
 
-    try:
-        results = model(frame, verbose=False)[0]
-        ball_detections = [r for r in results.boxes.data if int(r[-1]) == 32 and float(r[4]) > 0.10]
-    except Exception as e:
-        print(f"Model inference error: {e}")
-        ball_detections = []
-
+    # Get detections
+    results = model(frame, verbose=True)[0]
     center_y = None
+
+    ball_detections = [r for r in results.boxes.data if int(r[-1]) == 32 and float(r[4]) > 0.10]
     if ball_detections:
         ball = ball_detections[0]
         x1, y1, x2, y2 = map(int, ball[:4])
@@ -85,40 +71,17 @@ while cap.isOpened():
         cv2.circle(overlay, (center_x, center_y), 10, (255, 0, 0), -1)
         cv2.putText(overlay, "Simulated", (center_x + 15, center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
-    if cone1_y is None or cone2_y is None:
-        cv2.putText(overlay, "Click Cone 1 (start near kicker), then Cone 2 (end near camera)", (30, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-        cv2.imshow("Launch Sim", overlay)
-
-        def set_cones(event, x, y, flags, param):
-            global cone1_y, cone2_y
-            if event == cv2.EVENT_LBUTTONDOWN:
-                if cone1_y is None:
-                    cone1_y = y
-                    print(f"Set Cone 1 (START - near kicker) at y={y}")
-                elif cone2_y is None:
-                    cone2_y = y
-                    print(f"Set Cone 2 (END - near camera) at y={y}")
-
-        cv2.setMouseCallback("Launch Sim", set_cones)
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
-        continue
-
-    # Draw cones
     cv2.line(overlay, (0, cone1_y), (FRAME_WIDTH, cone1_y), (0, 0, 255), 2)
     cv2.line(overlay, (0, cone2_y), (FRAME_WIDTH, cone2_y), (255, 0, 0), 2)
     cv2.putText(overlay, "Cone 1 (START)", (30, cone1_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
     cv2.putText(overlay, "Cone 2 (END)", (30, cone2_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
-    # Detection logic
     if center_y:
         if not armed and center_y < cone1_y:
             armed = True
             cross_registered = False
             launch_point = (center_x, center_y)
-            print("System re-armed.")
+            print("System re-armed. (top-to-bottom)")
 
         if armed and not cross_registered and center_y >= cone1_y:
             cross_time_1 = time.time()
@@ -150,7 +113,7 @@ while cap.isOpened():
                 result_text = f"MISS ({speed_mph:.1f} MPH)"
 
             cv2.circle(overlay, (pred_x, pred_y), 10, color, -1)
-            print(f"[Virtual Goal] X: {pred_x}, Y: {pred_y} → {result_text}")
+            print(f"[Virtual Goal @ {GOAL_DISTANCE_YARDS} yards] X: {pred_x}, Y: {pred_y} → {result_text}")
 
             armed = False
             cross_time_1 = None
@@ -159,19 +122,8 @@ while cap.isOpened():
         cv2.putText(overlay, result_text, (30, FRAME_HEIGHT - 30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
     cv2.imshow("Launch Sim", overlay)
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-    elif key == ord('r'):
-        cone1_y = None
-        cone2_y = None
-        armed = False
-        cross_time_1 = None
-        speed_mph = None
-        launch_point = None
-        cross_registered = False
-        result_text = ""
-        print("Reset detection state.")
 
 cap.release()
 cv2.destroyAllWindows()
