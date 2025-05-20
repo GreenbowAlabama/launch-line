@@ -1,11 +1,12 @@
+# .github/workflows/prod-deploy.yml
 name: CD - Deploy to Production
 
 env:
   CHART_PATH: charts/launch-lab
   RELEASE_NAME: launch-lab-prod
   NAMESPACE: launch-lab-prod
-  API_IMAGE_REPO: ghcr.io/iancarter13/launch-lab-api
-  UI_IMAGE_REPO: ghcr.io/iancarter13/launch-lab-ui
+  API_IMAGE: ghcr.io/iancarter13/launch-lab-api
+  UI_IMAGE: ghcr.io/iancarter13/launch-lab-ui
 
 on:
   push:
@@ -36,25 +37,16 @@ jobs:
         id: set-tags
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "API_IMAGE_TAG=${API_IMAGE_REPO}:${SHORT_SHA}" >> $GITHUB_ENV
-          echo "UI_IMAGE_TAG=${UI_IMAGE_REPO}:${SHORT_SHA}" >> $GITHUB_ENV
-
-      - name: Set up Azure CLI
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set Kubernetes context
-        run: |
-          az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
-                                 --name ${{ secrets.AKS_CLUSTER_NAME }} \
-                                 --overwrite-existing
+          echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Deploy with Helm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           helm upgrade --install $RELEASE_NAME $CHART_PATH \
             --namespace $NAMESPACE --create-namespace \
-            --set image.repository=${{ env.API_IMAGE_REPO }} \
-            --set image.tag=${{ github.sha }} \
-            --set uiImage.repository=${{ env.UI_IMAGE_REPO }} \
-            --set uiImage.tag=${{ github.sha }}
+            --set image.repository=${{ env.API_IMAGE }} \
+            --set image.tag=${{ steps.set-tags.outputs.api_tag }} \
+            --set uiImage.repository=${{ env.UI_IMAGE }} \
+            --set uiImage.tag=${{ steps.set-tags.outputs.ui_tag }}
