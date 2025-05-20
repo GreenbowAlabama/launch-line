@@ -47,11 +47,21 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Get AKS credentials
+      - name: Set AKS credentials
         run: |
+          if [[ "$RELEASE_NAME" == *"-prod" ]]; then
+            echo "Targeting Production Cluster"
+            CLUSTER_NAME="${{ secrets.AKS_CLUSTER_NAME_PROD }}"
+            RESOURCE_GROUP="${{ secrets.AKS_RESOURCE_GROUP_PROD }}"
+          else
+            echo "Targeting Development Cluster"
+            CLUSTER_NAME="${{ secrets.AKS_CLUSTER_NAME_DEV }}"
+            RESOURCE_GROUP="${{ secrets.AKS_RESOURCE_GROUP_DEV }}"
+          fi
+
           az aks get-credentials \
-            --name "$AKS_CLUSTER_NAME" \
-            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$CLUSTER_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
             --overwrite-existing
 
       - name: Set image tags
