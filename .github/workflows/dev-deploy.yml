@@ -1,28 +1,39 @@
 # .github/workflows/dev-deploy.yml
-name: Deploy to Dev AKS
+name: CD - Deploy to Dev AKS
+
+env:
+  ENVIRONMENT: dev
+  CLUSTER_PREFIX: launch-lab
+  RG_PREFIX: rg-launch-lab
+  CHART_PATH: charts/launch-lab
+  RELEASE_NAME: launch-lab-dev
+  NAMESPACE: launch-lab-dev
+  API_IMAGE: ghcr.io/iancarter13/launch-lab-api
+  UI_IMAGE: ghcr.io/iancarter13/launch-lab-ui
 
 on:
   push:
     branches:
-      - main
-    paths:
-      - "ui/**"
-      - "api/**"
-      - ".github/workflows/dev-deploy.yml"
+      - dev
 
 jobs:
-  build-and-deploy:
+  deploy-dev:
+    name: Deploy to Dev AKS
     runs-on: ubuntu-latest
-
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-      UI_PATH: ./ui
-      API_PATH: ./api
+    environment: development
 
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Resolve AKS Cluster Info
+        id: resolve-aks
+        run: |
+          echo "AKS_CLUSTER_NAME=${CLUSTER_PREFIX}-${ENVIRONMENT}" >> $GITHUB_ENV
+          echo "AKS_RESOURCE_GROUP=${RG_PREFIX}-${ENVIRONMENT}" >> $GITHUB_ENV
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -31,39 +42,30 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push UI container
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.UI_PATH }}
-          file: ${{ env.UI_PATH }}/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-ui:dev
-
-      - name: Build and push API container
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.API_PATH }}
-          file: ${{ env.API_PATH }}/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:dev
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Set up Azure CLI
+      - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set Kubernetes context
-        run: az aks get-credentials --resource-group launch-lab-dev-rg --name launch-lab-dev-aks --overwrite-existing
-
-      - name: Deploy using Helm
+      - name: Get AKS credentials
         run: |
-          helm upgrade --install launch-lab ./charts/launch-lab \
-            --namespace default \
-            --set ui.image.tag=dev \
-            --set api.image.tag=dev
+          az aks get-credentials \
+            --name "$AKS_CLUSTER_NAME" \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --overwrite-existing
+
+      - name: Set image tags
+        id: set-tags
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_ENV
+          echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_ENV
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install $RELEASE_NAME $CHART_PATH \
+            --namespace $NAMESPACE --create-namespace \
+            --set image.repository=${API_IMAGE} \
+            --set image.tag=${api_tag} \
+            --set uiImage.repository=${UI_IMAGE} \
+            --set uiImage.tag=${ui_tag}
