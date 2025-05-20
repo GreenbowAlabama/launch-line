@@ -37,12 +37,13 @@ jobs:
           echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-      - name: Build and Push API
+      - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./api
+          context: .
+          file: ./Dockerfile
           push: true
-          tags: ${{ steps.set-tags.outputs.api_tag }}
+          tags: ghcr.io/${{ github.repository_owner }}/launch-lab-api:${{ steps.set-tags.outputs.api_tag }}
 
       - name: Build and Push UI
         uses: docker/build-push-action@v5
