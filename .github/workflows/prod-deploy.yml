@@ -1,0 +1,66 @@
+name: Deploy to Prod AKS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ui/**'
+      - 'api/**'
+      - '.github/workflows/prod-deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set tag as latest with short SHA
+        id: vars
+        run: echo "TAG=latest-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build and push API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/launch-lab-api:${{ env.TAG }}
+
+      - name: Build and push UI
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ui
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/launch-lab-ui:${{ env.TAG }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Kubeconfig context
+        run: az aks get-credentials --resource-group launch-lab-prod-rg --name launch-lab-prod-aks --overwrite-existing
+
+      - name: Deploy via Helm
+        run: |
+          helm upgrade --install launch-lab-prod ./charts/launch-lab \
+            --namespace launch-lab-prod \
+            --create-namespace \
+            --set ui.image.tag=${{ env.TAG }} \
+            --set api.image.tag=${{ env.TAG }}

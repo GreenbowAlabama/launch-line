@@ -1,0 +1,69 @@
+# .github/workflows/dev-deploy.yml
+name: Deploy to Dev AKS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "ui/**"
+      - "api/**"
+      - ".github/workflows/dev-deploy.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+      UI_PATH: ./ui
+      API_PATH: ./api
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push UI container
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.UI_PATH }}
+          file: ${{ env.UI_PATH }}/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-ui:dev
+
+      - name: Build and push API container
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.API_PATH }}
+          file: ${{ env.API_PATH }}/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:dev
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set up Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Kubernetes context
+        run: az aks get-credentials --resource-group launch-lab-dev-rg --name launch-lab-dev-aks --overwrite-existing
+
+      - name: Deploy using Helm
+        run: |
+          helm upgrade --install launch-lab ./charts/launch-lab \
+            --namespace default \
+            --set ui.image.tag=dev \
+            --set api.image.tag=dev

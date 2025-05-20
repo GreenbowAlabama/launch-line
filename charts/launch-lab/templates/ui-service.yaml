@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: launch-lab-ui
+  labels:
+    app: launch-lab-ui
+spec:
+  selector:
+    app: launch-lab-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP

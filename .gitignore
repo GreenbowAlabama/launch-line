@@ -1,7 +1,15 @@
 # Python virtual environment
 .venv/
+.venv*/
+venv/
+
+# env files
+.env
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
 
 # Mac system files
 .DS_Store
@@ -20,3 +28,4 @@ Icon?
 
 # Env-specific files
 .env
+.env.dev

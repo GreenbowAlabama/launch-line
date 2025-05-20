@@ -1,0 +1,14 @@
+# templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/name: {{ include "launch-lab.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+data:
+  RTSP_URL: {{ .Values.config.RTSP_URL | quote }}

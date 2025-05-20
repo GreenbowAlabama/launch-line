@@ -1,139 +1,41 @@
-## `README.md`
+# Local Development Setup
 
-```markdown
-# Launch Line ⚽📸  
-_A DIY Soccer Ball Speed Tracker using YOLOv8 and Computer Vision_
+## 1. Clone the Repository
 
-![Demo Screenshot](assets/demo.gif)
-
----
-
-## 🚀 Overview
-
-**Launch Line** is a real-time launch monitor for soccer players, coaches, and enthusiasts. It uses an external or wireless camera, YOLOv8 object detection, and motion tracking to measure ball speed based on its movement through a known distance (e.g., 6 feet).
-
----
-
-## 🎯 Features
-
-- ✅ Live video feed with object detection (YOLOv8)
-- ✅ Automatic ball tracking using bounding boxes
-- ✅ Speed calculation in mph, ft/s, and m/s
-- ✅ Support for Continuity Camera (iPhone) or USB webcams
-- ✅ Virtual environment setup and clean dependency management
-
----
-
-## 🧱 Tech Stack
-
-- Python 3.9+
-- OpenCV
-- YOLOv8 via [Ultralytics](https://github.com/ultralytics/ultralytics)
-- macOS or Windows/Linux
-
----
-
-## 🔧 Setup Instructions
-
-### 1. Clone and set up virtual environment
-
-```bash
-git clone https://github.com/GreenbowAlabama/launch-line.git
-cd launch-line
-
-python3 -m venv .venv
-source .venv/bin/activate
+```
+git clone https://github.com/your-org/your-repo.git
+cd your-repo
 ```
 
-### 2. Install dependencies
+## 2. Configure Environment Variables
 
-```bash
-pip install -r requirements.txt
+Copy the example environment file and update the values:
+
+```
+cp env.dev.example .env.dev
 ```
 
-> Or manually:
-```bash
-pip install ultralytics opencv-python
+Then edit `.env.dev` and provide your own MediaMTX server configuration:
+
+```
+RTSP_URL=rtsp://your-media-server-ip:8554/live/stream
+MEDIA_SERVER=http://your-media-server-ip:8888
 ```
 
----
+**Note:** Do not commit `.env.dev` to source control. It is ignored by `.gitignore`.
 
-## 📦 Usage
+## 3. Start the App Locally
 
-```bash
-source .venv/bin/activate  # Activate virtual env
-python yolo_main.py        # Run the launch monitor
+```
+./start-dev.sh
 ```
 
-> Press `Q` to exit the app
+This script will:
 
----
+* Activate the Python virtual environment
+* Install dependencies
+* Launch the Flask app with RTSP stream detection enabled
 
-## 📏 Default Setup
+You should see console output showing stream connection and YOLO detections.
 
-- Known distance between cones: `6 feet` (1.8288 meters)
-- Camera should be mounted **perpendicular** to ball path
-- Detection zone is from Cone A to Cone B
-
----
-
-## 📸 Camera Tips
-
-- Use 30fps or higher camera
-- Mount 4–6 feet from the ball path
-- Ensure even lighting across the floor
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 🤝 Contributing
-
-Pull requests and issues welcome!  
-Got cool use cases, garage setups, or speed records? Submit them!
-```
-
----
-
-## ✅ `.gitignore`
-
-Create a `.gitignore` file in your project root with:
-
-```gitignore
-# Python virtual environment
-.venv/
-__pycache__/
-*.pyc
-
-# Mac system files
-.DS_Store
-
-# VS Code settings (optional)
-.vscode/
-
-# OS trash / metadata
-.Trashes
-ehthumbs.db
-Thumbs.db
-Icon?
-
-# Logs
-*.log
-
-# Env-specific files
-.env
-```
-
----
-
-## ✅ Final Touch: Freeze Your Environment
-
-If not already done:
-
-```bash
-pip freeze > requirements.txt
-```
+For help, contact the maintainer or refer to the documentation inside the `docs/` folder (if present).

@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    ports:
+      - "1935:1935"      # RTMP
+      - "8888:8888"      # Web UI and HLS
+      - "8554:8554"      # RTSP
+      - "9997:9997"      # API
+    volumes:
+      - ./config/mediamtx.yml:/mediamtx.yml
+    restart: unless-stopped

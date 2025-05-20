@@ -1,0 +1,5 @@
+RTSP_URL=rtsp://192.168.1.226:8554/live/stream
+VITE_API_URL=http://localhost:5050
+VITE_API_BASE_URL=http://localhost:5050
+
+.env.development

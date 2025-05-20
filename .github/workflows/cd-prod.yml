@@ -1,0 +1,33 @@
+# .github/workflows/cd-prod.yml
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Set up Azure credentials
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Kubeconfig
+        run: az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+      - name: Deploy Helm chart to prod
+        run: |
+          helm upgrade --install launch-lab ./charts/launch-lab \
+            --namespace default \
+            --set image.tag=latest \
+            -f charts/launch-lab/values-prod.yaml

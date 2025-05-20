@@ -1,0 +1,49 @@
+# values.yaml
+replicaCount: 1
+
+image:
+  repository: iancarter13/launch-lab
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+
+api:
+  port: 5050
+
+ui:
+  image:
+    repository: iancarter13/launch-lab-ui
+    tag: latest
+    pullPolicy: Always
+  port: 5173
+
+simulator:
+  enabled: true
+  image:
+    repository: iancarter13/launch-lab
+    tag: latest
+    pullPolicy: Always
+  args:
+    - "--mode=replay"
+    - "--source=/app/recordings/test_kick.mp4"
+  env:
+    RTSP_URL: rtsp://192.168.1.226:8554/live/stream
+
+resources: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: launch-lab.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+config:
+  RTSP_URL: rtsp://192.168.1.226:8554/live/stream

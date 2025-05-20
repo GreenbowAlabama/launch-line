@@ -17,16 +17,15 @@ WORKDIR /app
 # Copy only requirements first for better caching
 COPY requirements.txt .
 
-# Install dependencies without caching wheels
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app code and assets
+# Copy the entire project contents into the image
 COPY . .
 
-COPY soccer_field.jpg .
+# Expose both Flask API (5050) and optional frontend (5173) if ever needed
+EXPOSE 5050
+EXPOSE 5173
 
-# Expose the port your app listens on
-EXPOSE 80
-
-# Run your app
-CMD ["python", "app.py"]
+# Set the default command to run the Flask API
+CMD ["python", "api/server.py"]

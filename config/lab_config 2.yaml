@@ -1,0 +1,19 @@
+garage:
+  width_ft: 17.5      # Width of the garage from left to right
+  depth_ft: 21.0      # Depth of the garage front to back
+
+camera:
+  mount_height_ft: 4.0
+  offset_from_back_wall_ft: 3.0
+  offset_from_left_wall_ft: 3.0
+
+ball_start:
+  offset_from_left_wall_ft: 6.0  # New value for x-axis based placement
+
+cones:
+  cone1_offset_ft: 8.0   # Distance from left wall to cone 1 (x-axis)
+  cone2_offset_ft: 16.0  # Distance from left wall to cone 2 (x-axis)
+
+goal_zone:
+  start_offset_from_left_wall_ft: 15.0  # Distance from left wall
+  depth_ft: 6.0                         # How wide the goal area is horizontally

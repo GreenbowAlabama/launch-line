@@ -1,0 +1,33 @@
+# charts/launch-lab/templates/deployment-simulator.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-simulator
+  labels:
+    app: {{ .Release.Name }}-simulator
+    {{- include "launch-lab.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-simulator
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-simulator
+    spec:
+      containers:
+        - name: simulator
+          image: "{{ .Values.simulator.image.repository }}:{{ .Values.simulator.image.tag }}"
+          imagePullPolicy: {{ .Values.simulator.image.pullPolicy }}
+          env:
+            - name: PYTHONPATH
+              value: "/app"
+            - name: RTSP_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-config
+                  key: RTSP_URL
+          command: ["python"]
+          args: ["app/simulator_headless.py", "--mode=replay", "--source=./recordings/test_kick.mp4"]
+          resources: {{- toYaml .Values.simulator.resources | nindent 12 }}
