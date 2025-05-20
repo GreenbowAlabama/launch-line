@@ -18,6 +18,8 @@ jobs:
     name: Deploy to Prod AKS
     runs-on: ubuntu-latest
     environment: production
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -37,12 +39,10 @@ jobs:
         id: set-tags
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "api_tag=\"${API_IMAGE}:${SHORT_SHA}\"" >> $GITHUB_OUTPUT
-          echo "ui_tag=\"${UI_IMAGE}:${SHORT_SHA}\"" >> $GITHUB_OUTPUT
+          echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Deploy with Helm
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           helm upgrade --install $RELEASE_NAME $CHART_PATH \
             --namespace $NAMESPACE --create-namespace \
