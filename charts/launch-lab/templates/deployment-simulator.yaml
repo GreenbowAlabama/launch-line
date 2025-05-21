@@ -7,6 +7,8 @@ metadata:
     app: {{ .Release.Name }}-simulator
     {{- include "launch-lab.labels" . | nindent 4 }}
 spec:
+  imagePullSecrets:
+    - name: {{ .Values.imagePullSecrets | first }}
   replicas: 1
   selector:
     matchLabels:

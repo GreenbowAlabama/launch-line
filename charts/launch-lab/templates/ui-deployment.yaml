@@ -1,11 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: launch-lab-ui
+  name: {{ .Release.Name }}-ui
   labels:
     app: launch-lab-ui
     {{- include "launch-lab.labels" . | nindent 4 }}
 spec:
+  imagePullSecrets:
+    - name: {{ .Values.imagePullSecrets | first }}
   replicas: 1
   selector:
     matchLabels:

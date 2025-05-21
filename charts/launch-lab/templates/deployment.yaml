@@ -16,7 +16,7 @@ spec:
         app: {{ .Release.Name }}-app
     spec:
       imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+        - name: {{ .Values.imagePullSecrets | first }}
       containers:
         - name: launch-lab
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
