@@ -5,8 +5,8 @@ env:
   CHART_PATH: charts/launch-lab
   RELEASE_NAME: launch-lab-dev
   NAMESPACE: launch-lab-dev
-  API_IMAGE: ghcr.io/iancarter13/launch-lab-api
-  UI_IMAGE: ghcr.io/iancarter13/launch-lab-ui
+  API_IMAGE: ghcr.io/greenbowalabama/launch-lab-api
+  UI_IMAGE: ghcr.io/greenbowalabama/launch-lab-ui
 
 on:
   push:

@@ -7,8 +7,8 @@ on:
       - main
 
 env:
-  API_IMAGE: ghcr.io/iancarter13/launch-lab-api
-  UI_IMAGE: ghcr.io/iancarter13/launch-lab-ui
+  API_IMAGE: ghcr.io/greenbowalabama/launch-lab-api
+  UI_IMAGE: ghcr.io/greenbowalabama/launch-lab-ui
 
 jobs:
   build-and-push-api:
