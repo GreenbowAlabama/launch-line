@@ -34,7 +34,7 @@ jobs:
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}" | tr '[:upper:]' '[:lower:]')
-          echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "api_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Build and push API image
