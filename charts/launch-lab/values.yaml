@@ -15,11 +15,15 @@ service:
   port: 80
 
 api:
+  image:
+    repository: ghcr.io/greenbowalabama/launch-lab-api
+    tag: latest
+    pullPolicy: Always
   port: 5050
 
 ui:
   image:
-    repository: iancarter13/launch-lab-ui
+    repository: ghcr.io/greenbowalabama/launch-lab-ui
     tag: latest
     pullPolicy: Always
   port: 5173
@@ -27,7 +31,7 @@ ui:
 simulator:
   enabled: true
   image:
-    repository: iancarter13/launch-lab
+    repository: ghcr.io/greenbowalabama/launch-lab
     tag: latest
     pullPolicy: Always
   args:
