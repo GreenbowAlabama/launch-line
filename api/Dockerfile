@@ -1,20 +1,20 @@
-# api/Dockerfile
-FROM python:3.11-slim
+FROM --platform=linux/amd64 python:3.11-slim
 
-# System dependencies for bcrypt (used by passlib)
-RUN apt-get update && apt-get install -y build-essential libffi-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working dir
 WORKDIR /app
 
-# Install Python dependencies
-COPY ../requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy API source code
 COPY . .
 
 EXPOSE 5050
-
 CMD ["python", "server.py"]
