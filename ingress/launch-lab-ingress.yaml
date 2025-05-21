@@ -1,0 +1,31 @@
+# ingress/launch-lab-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: launch-lab-ingress
+  namespace: launch-lab-prod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: launch-labs.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: launch-lab-ui
+                port:
+                  number: 80
+    - host: dev.launch-labs.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: launch-lab-api
+                port:
+                  number: 5050
