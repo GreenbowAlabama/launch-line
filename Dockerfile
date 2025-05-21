@@ -1,31 +1,39 @@
-# Use a minimal Python base image
-FROM --platform=linux/amd64 python:3.11-slim
+# syntax=docker/dockerfile:1.4
 
-# Install required system dependencies for OpenCV
-RUN apt-get update && apt-get install -y \
-    libgl1 \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+### Step 1: Build UI
+FROM node:18-alpine AS ui-builder
+WORKDIR /app/ui
+COPY ui/package*.json ./
+RUN npm ci
+COPY ui/ .
+RUN npm run build
 
-# Set working directory inside the container
+### Step 2: Build Python API
+FROM python:3.11-slim AS api-builder
 WORKDIR /app
 
-# Copy only requirements first for better caching
-COPY requirements.txt .
+# Install system packages for OpenCV and Flask
+RUN apt-get update && apt-get install -y \
+    libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 ffmpeg \
+    nginx supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project contents into the image
-COPY . .
+# Copy API code
+COPY api/ ./api
 
-# Expose both Flask API (5050) and optional frontend (5173) if ever needed
-EXPOSE 5050
-EXPOSE 5173
+# Copy built UI into NGINX web root
+COPY --from=ui-builder /app/ui/dist /usr/share/nginx/html
 
-# Set the default command to run the Flask API
-CMD ["python", "api/server.py"]
+# Copy NGINX and supervisord configs
+COPY deploy/nginx.conf /etc/nginx/nginx.conf
+COPY deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose ports
+EXPOSE 80 5050
+
+# Start both services
+CMD ["/usr/bin/supervisord"]
