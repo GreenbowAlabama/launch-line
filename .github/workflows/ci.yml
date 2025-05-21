@@ -38,11 +38,10 @@ jobs:
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           docker buildx build \
-            --file ./api/Dockerfile \
-            --tag $API_IMAGE:$SHORT_SHA \
-            --tag $API_IMAGE:latest \
+            --file api/Dockerfile \
+            --tag ghcr.io/greenbowalabama/launch-lab-api:${{ steps.short-sha.outputs.sha }} \
             --push \
-            ./api
+            .
 
   build-and-push-ui:
     name: Build and Push UI
