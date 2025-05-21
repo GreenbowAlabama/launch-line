@@ -22,10 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire API source code into the container
 COPY api/ ./api/
-COPY api/server.py .
 
 # Expose the Flask API port
 EXPOSE 5050
 
-# Set the default command to run the Flask API
-CMD ["python", "server.py"]
+# Set the default command to run the Flask API (assuming entry point is api/server.py)
+CMD ["python", "api/server.py"]
