@@ -3,7 +3,7 @@
 import os
 from flask import Flask, jsonify
 from flask_cors import CORS
-from api.auth import auth_bp
+from auth import auth_bp
 
 app = Flask(__name__)
 app.config["JWT_SECRET"] = os.getenv("JWT_SECRET", "secret")
