@@ -16,7 +16,7 @@ spec:
         app: {{ .Release.Name }}-app
     spec:
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecrets | first }}
+        - name: {{ .Values.imagePullSecrets[0].name }}
       containers:
         - name: launch-lab
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
