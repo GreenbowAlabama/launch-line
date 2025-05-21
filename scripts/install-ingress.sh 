@@ -1,18 +1,15 @@
+# scripts/install-ingress.sh
 #!/bin/bash
-set -euo pipefail
 
-NAMESPACE=${INGRESS_NAMESPACE:-ingress-nginx}
+set -e
 
-echo "Creating namespace $NAMESPACE if it doesn't exist..."
+NAMESPACE="${INGRESS_NAMESPACE:-ingress-nginx}"
+
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-echo "Adding ingress-nginx Helm repo..."
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-echo "Installing ingress-nginx via Helm..."
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace "$NAMESPACE" \
   --set controller.publishService.enabled=true
-
-echo "Ingress controller installation complete."
