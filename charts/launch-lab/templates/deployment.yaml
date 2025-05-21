@@ -1,4 +1,3 @@
-# templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,18 +14,22 @@ spec:
       labels:
         app: {{ .Release.Name }}-app
     spec:
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecrets[0].name }}
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
-        - name: launch-lab
+        - name: launch-lab-api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
-            - containerPort: {{ .Values.ui.port }}
           env:
             - name: RTSP_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-config
                   key: RTSP_URL
+        - name: launch-lab-ui
+          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.ui.port }}
