@@ -60,4 +60,4 @@ jobs:
             --set api.image.tag=${{ steps.set-tags.outputs.short_sha }} \
             --set ui.image.repository=${{ env.UI_IMAGE }} \
             --set ui.image.tag=${{ steps.set-tags.outputs.short_sha }} \
-            --set imagePullSecrets[0].name=ghcr-secret
+            --set-string imagePullSecrets[0].name=ghcr-secret
