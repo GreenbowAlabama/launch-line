@@ -1,4 +1,3 @@
-# .github/workflows/dev-deploy.yml
 name: CD - Deploy to Dev Environment
 
 on:
@@ -47,18 +46,18 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v3
 
-      - name: Set image tags
+      - name: Extract short SHA
         id: set-tags
         run: |
           SHORT_SHA=$(echo "${{ env.COMMIT_SHA }}" | cut -c1-7)
-          echo "api_tag=${API_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "ui_tag=${UI_IMAGE}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
 
       - name: Deploy to Dev using Helm
         run: |
           helm upgrade --install $RELEASE_NAME $CHART_PATH \
             --namespace $NAMESPACE --create-namespace \
             --set api.image.repository=${{ env.API_IMAGE }} \
-            --set api.image.tag=${{ steps.set-tags.outputs.api_tag }} \
+            --set api.image.tag=${{ steps.set-tags.outputs.short_sha }} \
             --set ui.image.repository=${{ env.UI_IMAGE }} \
-            --set ui.image.tag=${{ steps.set-tags.outputs.ui_tag }}
+            --set ui.image.tag=${{ steps.set-tags.outputs.short_sha }} \
+            --set imagePullSecrets[0].name=ghcr-secret
