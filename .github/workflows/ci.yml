@@ -29,6 +29,9 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
       - name: Install Python dependencies
         working-directory: ./api
         run: |
