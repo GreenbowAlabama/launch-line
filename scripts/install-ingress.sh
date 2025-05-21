@@ -1,5 +1,5 @@
 # scripts/install-ingress.sh
-#!/bin/bash
+#!/bin/bash 
 
 set -e
 
