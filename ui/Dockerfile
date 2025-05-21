@@ -1,21 +1,27 @@
-# ui/Dockerfile
-# Build React app
-FROM node:20 AS builder
+# Step 1: Build the React app
+FROM node:18-alpine AS builder
 
+# Set working directory
 WORKDIR /app
-COPY . .
-RUN npm install && npm run build
 
-# Serve static files
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the frontend code
+COPY . .
+
+# Build the production static files
+RUN npm run build
+
+# Step 2: Serve with NGINX
 FROM nginx:stable-alpine
 
-# Copy build artifacts
+# Copy build output to NGINX's public folder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Ensure custom error routing (e.g., /dashboard)
-RUN rm /etc/nginx/conf.d/default.conf
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-
+# Expose port 80 to the world
 EXPOSE 80
 
+# Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]

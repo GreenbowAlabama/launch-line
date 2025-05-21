@@ -1,7 +1,7 @@
 # Use a minimal Python base image
 FROM python:3.11-slim
 
-# Install required system dependencies for Flask + security deps
+# Install system dependencies needed for some Python packages (if any)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -14,11 +14,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy API source code
+# Copy the full application code
 COPY . .
 
-# Expose Flask API port
+# Expose the Flask API port
 EXPOSE 5050
 
-# Run the Flask server
-CMD ["python", "server.py"]
+# Run the Flask app
+CMD ["python", "api/server.py"]
