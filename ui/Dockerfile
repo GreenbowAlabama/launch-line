@@ -4,27 +4,26 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+# Copy dependency definitions first (leverage layer caching)
+COPY ui/package*.json ./
 
-# Copy the rest of the frontend code
-COPY . .
+# Install dependencies
+RUN npm ci
 
-# Build the production static files
+# Copy the rest of the frontend source
+COPY ui/ .
+
+# Build production-ready static files
 RUN npm run build
 
 # Step 2: Serve with NGINX
 FROM nginx:stable-alpine
 
-# Remove default NGINX static files
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy build output from Vite (Vite defaults to /dist)
+# Copy build output to NGINX's public folder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
+# Expose port 80 for HTTP traffic
 EXPOSE 80
 
-# Start NGINX
+# Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]
