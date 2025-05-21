@@ -1,7 +1,7 @@
-# api/Dockerfile
+# Use a minimal Python base image
 FROM python:3.11-slim
 
-# Install required system dependencies
+# Install system dependencies required for OpenCV and media processing
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -11,19 +11,21 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt ./
+# Copy requirements file from the API folder
+COPY api/requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy API source code
+# Copy the entire API source code into the container
 COPY api/ ./api/
-COPY server.py .
+COPY api/server.py .
 
 # Expose the Flask API port
 EXPOSE 5050
 
-# Start the API
+# Set the default command to run the Flask API
 CMD ["python", "server.py"]
