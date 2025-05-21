@@ -1,6 +1,6 @@
 # Local Development Setup
 
-## 1. Clone the Repository
+## 1. Clone the Repository 
 
 ```
 git clone https://github.com/your-org/your-repo.git
