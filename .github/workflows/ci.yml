@@ -29,6 +29,12 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
+      - name: Install API Python dependencies
+        working-directory: ./api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Build and push API image
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
