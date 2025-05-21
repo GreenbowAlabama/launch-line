@@ -1,9 +1,5 @@
-name: CD - Deploy to Dev AKS
-
-on:
-  push:
-    branches:
-      - dev
+# .github/workflows/dev-deploy.yml
+name: CD - Deploy to Dev Environment
 
 env:
   CHART_PATH: charts/launch-lab
@@ -12,50 +8,101 @@ env:
   API_IMAGE: ghcr.io/iancarter13/launch-lab-api
   UI_IMAGE: ghcr.io/iancarter13/launch-lab-ui
 
+on:
+  push:
+    branches:
+      - main
+
 jobs:
-  deploy-dev:
-    name: Deploy to Dev AKS
+  build-and-push:
+    name: CI - Build and Push to GHCR
     runs-on: ubuntu-latest
-    environment: development
 
     steps:
-      - name: Checkout source code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Set image tags
-        id: set-tags
-        run: |
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "api_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "ui_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+      - name: Extract short SHA
+        id: sha
+        run: echo "short_sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
-      - name: Set AKS Credentials for Dev
+      - name: Build and push API image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --file ./Dockerfile \
+            --tag $API_IMAGE:${{ steps.sha.outputs.short_sha }} \
+            --push \
+            .
+
+      - name: Build and push UI image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --file ./ui/Dockerfile \
+            --tag $UI_IMAGE:${{ steps.sha.outputs.short_sha }} \
+            --push \
+            ./ui
+
+  deploy-aks:
+    name: Provision Dev AKS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Get AKS Context
-        run: |
-          az aks get-credentials \
-            --name ${{ secrets.AKS_CLUSTER_NAME_DEV }} \
-            --resource-group ${{ secrets.AKS_RESOURCE_GROUP_DEV }} \
-            --overwrite-existing
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME_DEV }}
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP_DEV }}
 
-      - name: Deploy to Dev using Helm
+  deploy-dev:
+    name: Deploy to Dev AKS
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-aks]
+    environment: development
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME_DEV }}
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP_DEV }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Extract short SHA
+        id: sha
+        run: echo "short_sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Deploy with Helm
         run: |
           helm upgrade --install $RELEASE_NAME $CHART_PATH \
             --namespace $NAMESPACE --create-namespace \
-            --set image.repository=${{ env.API_IMAGE }} \
-            --set image.tag=${{ steps.set-tags.outputs.api_tag }} \
-            --set uiImage.repository=${{ env.UI_IMAGE }} \
-            --set uiImage.tag=${{ steps.set-tags.outputs.ui_tag }}
+            --set image.repository=$API_IMAGE \
+            --set image.tag=${{ steps.sha.outputs.short_sha }} \
+            --set uiImage.repository=$UI_IMAGE \
+            --set uiImage.tag=${{ steps.sha.outputs.short_sha }}
