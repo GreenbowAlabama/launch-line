@@ -17,11 +17,14 @@ RUN npm run build
 # Step 2: Serve with NGINX
 FROM nginx:stable-alpine
 
-# Copy build output to NGINX's public folder
+# Remove default NGINX static files
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy build output from Vite (Vite defaults to /dist)
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80 to the world
+# Expose port 80
 EXPOSE 80
 
-# Start NGINX in foreground
+# Start NGINX
 CMD ["nginx", "-g", "daemon off;"]
