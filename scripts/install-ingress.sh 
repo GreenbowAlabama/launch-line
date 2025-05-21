@@ -1,36 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-NAMESPACE="${1:-ingress-nginx}"
+NAMESPACE=${INGRESS_NAMESPACE:-ingress-nginx}
 
-echo "Creating namespace: $NAMESPACE"
+echo "Creating namespace $NAMESPACE if it doesn't exist..."
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Adding ingress-nginx Helm repo..."
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-echo "Installing ingress-nginx controller..."
+echo "Installing ingress-nginx via Helm..."
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace "$NAMESPACE" \
-  --set controller.publishService.enabled=true \
-  --wait --timeout 5m
+  --set controller.publishService.enabled=true
 
-echo "Ingress controller installed successfully in namespace: $NAMESPACE"
-
-echo "Fetching external IP (may take a few seconds)..."
-EXTERNAL_IP=""
-for i in {1..30}; do
-  EXTERNAL_IP=$(kubectl get svc ingress-nginx-controller -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-  if [[ -n "$EXTERNAL_IP" ]]; then
-    echo "Public IP: $EXTERNAL_IP"
-    break
-  fi
-  echo "Waiting for external IP..."
-  sleep 10
-done
-
-if [[ -z "$EXTERNAL_IP" ]]; then
-  echo "Failed to obtain external IP for ingress-nginx."
-  exit 1
-fi
+echo "Ingress controller installation complete."
