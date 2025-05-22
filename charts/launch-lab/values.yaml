@@ -1,10 +1,5 @@
 replicaCount: 1
 
-image:
-  repository: iancarter13/launch-lab
-  tag: latest
-  pullPolicy: Always
-
 imagePullSecrets:
   - name: ghcr-secret
 

@@ -1,4 +1,3 @@
-# Helm: templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,6 +21,7 @@ spec:
       containers:
         - name: launch-lab-api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
           env:
@@ -30,8 +30,21 @@ spec:
                 configMapKeyRef:
                   name: {{ .Release.Name }}-config
                   key: RTSP_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
 
         - name: launch-lab-ui
           image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.ui.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10

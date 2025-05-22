@@ -1,7 +1,7 @@
 # Use a minimal Python base image
 FROM python:3.11-slim
 
-# Install required system dependencies for OpenCV
+# Install required system dependencies for OpenCV and other dependencies
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -14,15 +14,19 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy only requirements first for caching
-COPY api/requirements.txt ./
+# Add working directory to Python path
+ENV PYTHONPATH=/app
+
+# Copy only requirements first (for layer caching)
+COPY api/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire API source code into the container
+# Copy the API source code and remaining project files
 COPY api/ ./api/
+COPY . .
 
 # Expose the Flask API port
 EXPOSE 5050
 
-# Run the Flask server
+# Start the Flask app
 CMD ["python", "api/server.py"]
