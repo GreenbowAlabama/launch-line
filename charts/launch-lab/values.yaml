@@ -17,7 +17,7 @@ api:
 ui:
   image:
     repository: ghcr.io/greenbowalabama/launch-lab-ui
-    tag: 2c31ce2
+    tag: latest
     pullPolicy: Always
   port: 80
 
@@ -37,15 +37,26 @@ resources: {}
 
 ingress:
   enabled: true
-  className: "nginx"  # or your ingress controller class, if set
+  className: nginx
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
     - host: launch-labs.io
       paths:
         - path: /
-          pathType: Prefix
-  tls: []
+          pathType: ImplementationSpecific
+    - host: dev.launch-labs.io
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - launch-labs.io
+      secretName: launch-labs-io-tls
+    - hosts:
+        - dev.launch-labs.io
+      secretName: dev-launch-labs-io-tls
 
 config:
   RTSP_URL: rtsp://192.168.1.226:8554/live/stream
