@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { AuthContext } from "../auth/AuthProvider"; // assumes you have context
+import { AuthContext } from "../contexts/AuthProvider";
 
 export default function TestKickUploader() {
   const { token } = useContext(AuthContext);
