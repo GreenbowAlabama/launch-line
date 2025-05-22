@@ -17,12 +17,12 @@ api:
 ui:
   image:
     repository: ghcr.io/greenbowalabama/launch-lab-ui
-    tag: latest
+    tag: 2c31ce2
     pullPolicy: Always
-  port: 5173
+  port: 80
 
 simulator:
-  enabled: true
+  enabled: false
   image:
     repository: ghcr.io/greenbowalabama/launch-lab
     tag: latest

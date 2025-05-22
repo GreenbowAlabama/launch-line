@@ -1,4 +1,5 @@
 # charts/launch-lab/templates/deployment-simulator.yaml
+{{- if .Values.simulator.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,3 +34,4 @@ spec:
           command: ["python"]
           args: ["app/simulator_headless.py", "--mode=replay", "--source=./recordings/test_kick.mp4"]
           resources: {{- toYaml .Values.simulator.resources | nindent 12 }}
+{{- end }}
