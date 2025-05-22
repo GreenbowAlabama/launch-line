@@ -1,29 +1,16 @@
-# Step 1: Build the React app
-FROM node:18-alpine AS builder
+# Stage 1: Build
+FROM node:20-alpine as build
 
-# Set working directory
 WORKDIR /app
+COPY ui/ /app/
+RUN npm install && npm run build
 
-# Copy dependency definitions first (leverage layer caching)
-COPY ui/package*.json ./
+# Stage 2: Serve with NGINX
+FROM nginx:1.25-alpine
 
-# Install dependencies
-RUN npm ci
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY ui/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the rest of the frontend source
-COPY ui/ .
-
-# Build production-ready static files
-RUN npm run build
-
-# Step 2: Serve with NGINX
-FROM nginx:stable-alpine
-
-# Copy build output to NGINX's public folder
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose port 80 for HTTP traffic
 EXPOSE 80
 
-# Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]
