@@ -36,14 +36,15 @@ simulator:
 resources: {}
 
 ingress:
-  enabled: false
-  className: ""
-  annotations: {}
+  enabled: true
+  className: "nginx"  # or your ingress controller class, if set
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
-    - host: launch-lab.local
+    - host: launch-labs.io
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
   tls: []
 
 config:
