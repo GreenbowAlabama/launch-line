@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: launch-lab-ui
+  name: {{ .Release.Name }}-ui
   labels:
-    app: launch-lab-ui
+    app: {{ .Release.Name }}-ui
 spec:
+  type: ClusterIP
   selector:
-    app: launch-lab-ui
+    app: {{ .Release.Name }}-ui
   ports:
     - name: http
       port: 80
-      targetPort: 80
-  type: ClusterIP
+      targetPort: {{ .Values.ui.port }}
