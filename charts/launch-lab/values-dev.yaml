@@ -42,15 +42,14 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: launch-labs.io
+    - host: dev.launch-labs.io
       paths:
         - path: /
           pathType: ImplementationSpecific
-
   tls:
     - hosts:
-        - launch-labs.io
-      secretName: launch-labs-io-tls
+        - dev.launch-labs.io
+      secretName: dev-launch-labs-io-tls
 
 config:
   RTSP_URL: rtsp://192.168.1.226:8554/live/stream
