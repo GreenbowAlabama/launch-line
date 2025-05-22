@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI - Build and Push to GHCR
 
 on:
@@ -6,6 +7,7 @@ on:
       - main
 
 env:
+  # Always use lowercase for GHCR image names
   API_IMAGE: ghcr.io/greenbowalabama/launch-lab-api
   UI_IMAGE: ghcr.io/greenbowalabama/launch-lab-ui
 
@@ -28,18 +30,13 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Install Python dependencies
-        working-directory: ./api
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Build and push API image
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           docker buildx build \
             --file api/Dockerfile \
-            --tag ghcr.io/greenbowalabama/launch-lab-api:${{ steps.short-sha.outputs.sha }} \
+            --tag $API_IMAGE:$SHORT_SHA \
+            --tag $API_IMAGE:latest \
             --push \
             .
 
@@ -61,18 +58,12 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Install UI dependencies
-        working-directory: ./ui
-        run: |
-          npm ci
-          npm run build
-
       - name: Build and push UI image
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           docker buildx build \
-            --file ./ui/Dockerfile \
+            --file ui/Dockerfile \
             --tag $UI_IMAGE:$SHORT_SHA \
             --tag $UI_IMAGE:latest \
             --push \
-            ./ui
+            .
