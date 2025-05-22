@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Stopping Flask authentication API..."
+echo "Stopping Flask authentication API... "
 
 if [ -f .flask_auth_pid ]; then
   PID=$(cat .flask_auth_pid)
