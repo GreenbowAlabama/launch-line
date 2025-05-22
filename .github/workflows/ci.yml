@@ -65,5 +65,6 @@ jobs:
             --file ui/Dockerfile \
             --tag $UI_IMAGE:$SHORT_SHA \
             --tag $UI_IMAGE:latest \
+            --build-arg VITE_API_URL=http://launch-labs.io/api \
             --push \
             .
