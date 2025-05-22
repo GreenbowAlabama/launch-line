@@ -45,8 +45,13 @@ ingress:
     - host: launch-labs.io
       paths:
         - path: /
-          pathType: ImplementationSpecific
-
+          pathType: Prefix
+          serviceName: launch-lab-prod-ui
+          servicePort: 80
+        - path: /api
+          pathType: Prefix
+          serviceName: launch-lab-prod-api
+          servicePort: 5050
   tls:
     - hosts:
         - launch-labs.io

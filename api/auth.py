@@ -7,7 +7,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 # In-memory user store (replace with DB later)
 users = {}
 
-@auth_bp.route("/register", methods=["POST"])
+@app.route("/auth/register", methods=["POST"])
 def register():
     data = request.get_json()
     email = data.get("email")
@@ -16,11 +16,15 @@ def register():
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
 
-    if email in users:
-        return jsonify({"error": "User already exists"}), 409
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "User already exists"}), 400
 
-    users[email] = bcrypt.hash(password)
-    return jsonify({"status": "registered"}), 201
+    hashed_password = generate_password_hash(password)
+    new_user = User(email=email, password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"message": "User registered"}), 201
 
 @auth_bp.route("/login", methods=["POST"])
 def login():

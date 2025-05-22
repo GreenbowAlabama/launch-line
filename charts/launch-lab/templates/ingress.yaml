@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -19,9 +19,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $.Release.Name }}-ui
+                name: {{ .serviceName | default (printf "%s-ui" $.Release.Name) }}
                 port:
-                  number: 80
+                  number: {{ .servicePort | default 80 }}
           {{- end }}
     {{- end }}
   {{- if .Values.ingress.tls }}
