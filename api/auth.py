@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from passlib.hash import bcrypt
 from api.jwt_utils import create_jwt, decode_jwt
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+auth_bp = Blueprint("auth", __name__)
 
 # In-memory user store (replace with DB later)
 users = {}

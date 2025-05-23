@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify
 from flask_cors import CORS
-from api.auth import auth_bp  # Ensure this path matches your project layout
+from api.auth import auth_bp
 
 app = Flask(__name__)
 app.config["JWT_SECRET"] = os.getenv("JWT_SECRET", "secret")
@@ -10,7 +10,7 @@ app.config["JWT_SECRET"] = os.getenv("JWT_SECRET", "secret")
 CORS(app, resources={r"/auth/*": {"origins": "*"}})
 
 # Register authentication routes
-app.register_blueprint(auth_bp)
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
 # Health check endpoint
 @app.route("/api/health", methods=["GET"])
