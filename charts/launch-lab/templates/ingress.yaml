@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -14,15 +14,20 @@ spec:
     - host: {{ .host }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
+          - path: /api
+            pathType: Prefix
             backend:
               service:
-                name: {{ .serviceName | default (printf "%s-ui" $.Release.Name) }}
+                name: {{ $.Release.Name }}-api
                 port:
-                  number: {{ .servicePort | default 80 }}
-          {{- end }}
+                  number: {{ $.Values.api.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-ui
+                port:
+                  number: {{ $.Values.ui.port }}
     {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
