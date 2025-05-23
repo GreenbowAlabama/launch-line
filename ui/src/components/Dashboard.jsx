@@ -1,10 +1,9 @@
-import React from "react";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import TestKickUploader from "./TestKickUploader";
 
 export default function Dashboard() {
-  const { user, logout } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
 
   return (
     <div className="p-6 text-white">
