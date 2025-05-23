@@ -5,6 +5,7 @@ from api.auth import auth_bp
 
 app = Flask(__name__)
 app.config["JWT_SECRET"] = os.getenv("JWT_SECRET", "secret")
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
 
 # Allow CORS for all /auth/* routes (adjust origins if needed later)
 CORS(app, resources={r"/auth/*": {"origins": "*"}})
