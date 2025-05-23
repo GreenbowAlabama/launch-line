@@ -15,6 +15,8 @@ api:
   port: 5050
 
 ui:
+  env:
+    VITE_API_URL: https://launch-labs.io/api
   image:
     repository: ghcr.io/greenbowalabama/launch-lab-ui
     tag: latest
