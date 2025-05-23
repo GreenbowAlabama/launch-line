@@ -32,7 +32,7 @@ spec:
                   key: RTSP_URL
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/health
               port: {{ .Values.api.port }}
             initialDelaySeconds: 5
             periodSeconds: 10
