@@ -13,7 +13,7 @@ CORS(app, resources={r"/auth/*": {"origins": "*"}})
 app.register_blueprint(auth_bp)
 
 # Health check endpoint
-@app.route("/health", methods=["GET"])
+@app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"}), 200
 
