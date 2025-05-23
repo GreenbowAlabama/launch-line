@@ -52,9 +52,9 @@ function LoginForm() {
       >
         Login
       </button>
-      <p className="mt-4 text-sm">
+      {/* <p className="mt-4 text-sm">
         Don't have an account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
-      </p>
+      </p> */}
     </form>
   );
 }
