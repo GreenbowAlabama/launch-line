@@ -3,6 +3,7 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -18,6 +19,7 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
       localStorage.setItem("token", data.token);
+      setToken(data.token);
 
       const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${data.token}` },
@@ -35,11 +37,12 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, token }}>
       {children}
     </AuthContext.Provider>
   );

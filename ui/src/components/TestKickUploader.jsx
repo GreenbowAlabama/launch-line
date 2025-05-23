@@ -7,7 +7,7 @@ export default function TestKickUploader() {
   const [result, setResult] = useState(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
-
+  console.log("TOKEN:", token);
   if (!token) return null;
 
   const handleSubmit = async (e) => {
