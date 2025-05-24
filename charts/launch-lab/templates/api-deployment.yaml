@@ -25,6 +25,19 @@ spec:
           ports:
             - containerPort: {{ .Values.api.port }}
           env:
+            - name: DB_HOST
+              value: {{ .Values.api.env.DB_HOST | quote }}
+            - name: DB_PORT
+              value: {{ .Values.api.env.DB_PORT | quote }}
+            - name: DB_NAME
+              value: {{ .Values.api.env.DB_NAME | quote }}
+            - name: DB_USER
+              value: {{ .Values.api.env.DB_USER | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
             - name: RTSP_URL
               valueFrom:
                 configMapKeyRef:
